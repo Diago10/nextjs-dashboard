@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import Table from '@/app/ui/customers/table';
-import { lusitana } from '@/app/ui/font';
 import { Suspense } from 'react';
 import { fetchFilteredCustomers } from '@/app/lib/data';
 import { InvoiceSkeleton } from '@/app/ui/skeletons';
