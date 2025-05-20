@@ -1,13 +1,23 @@
-"use client"
+import { Metadata } from 'next';
+import Table from '@/app/ui/customers/table';
+import { lusitana } from '@/app/ui/font';
+import { Suspense } from 'react';
+import { fetchFilteredCustomers } from '@/app/lib/data';
+import { InvoiceSkeleton } from '@/app/ui/skeletons';
 
-import { usePathname } from "next/navigation";
-export default function Page() {
-    const pathname = usePathname();
+export const metadata: Metadata = {
+  title: 'Customers',
+};
 
-  return(
+export default async function Page() {
+  const query = ''; // Define the query or receive it as a prop
+  const customers = await fetchFilteredCustomers(query);
+
+  return (
     <>
-    <p>Customers Page</p>
-    <p>{pathname}</p>
+      <Suspense fallback={<InvoiceSkeleton />}>
+        <Table customers={customers} />
+      </Suspense>
     </>
   );
 }
