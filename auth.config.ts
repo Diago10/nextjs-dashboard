@@ -1,21 +1,48 @@
-import type { NextAuthConfig } from 'next-auth';
+import type { NextAuthConfig } from "next-auth";
+import { NextResponse } from "next/server";
 
-export const authConfig = {
+export const authConfig: NextAuthConfig = {
   pages: {
-    signIn: '/login',
+    signIn: "/login",
   },
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
+    async authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-      if (isOnDashboard) {
-        if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
-      } else if (isLoggedIn) {
-        return Response.redirect(new URL('/dashboard', process.env.NEXTAUTH_URL));
+      const { pathname } = request.nextUrl;
+      
+      if (pathname.startsWith("/dashboard") && !isLoggedIn) {
+        // Redirect unauthenticated users trying to access protected routes
+        return false;
       }
-      return true;
+      
+      return true; // Allow access to public routes
+    },
+    async redirect({ url, baseUrl }) {
+      // Redirect to /dashboard after successful login
+      if (url === baseUrl || url === `${baseUrl}/login`) {
+        return `${baseUrl}/dashboard`;
+      }
+      return url;
     },
   },
-  providers: [], // Add providers with an empty array for now
-} satisfies NextAuthConfig;
+  providers: [
+    // Example provider configuration (replace with your actual providers)
+    // Providers.GitHub({
+    //   clientId: process.env.GITHUB_CLIENT_ID!,
+    //   clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    // }),
+  ],
+};
+
+// Middleware for handling redirects
+export function middleware(req: Request) {
+  const url = new URL(req.url);
+  const pathname = url.pathname;
+  
+  if (pathname.startsWith("/dashboard") && !req.headers.get("cookie")?.includes("next-auth.session-token")) {
+    // Redirect unauthenticated users to login page
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  return NextResponse.next(); // Proceed as normal
+}
